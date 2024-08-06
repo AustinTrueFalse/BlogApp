@@ -5,48 +5,48 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlogApp.Controllers
 {
-    public class TagController : Controller
+    public class RoleController : Controller
     {
-        private readonly ITagService _tagService;
+        private readonly IRoleService _roleService;
 
-        public TagController(ITagService tagService)
+        public RoleController(IRoleService roleService)
         {
-            _tagService = tagService;
+            _roleService = roleService;
         }
 
-        // GET: Tag
+        // GET: Role
         public async Task<IActionResult> Index()
         {
-            var tags = await _tagService.GetAllTagsAsync();
-            return View(tags);
+            var roles = await _roleService.GetAllRolesAsync();
+            return View(roles);
         }
 
-        // GET: Tag/Details/5
+        // GET: Role/Details/5
         public async Task<IActionResult> Details(int id)
         {
-            var tag = await _tagService.GetTagByIdAsync(id);
-            if (tag == null)
+            var role = await _roleService.GetRoleByIdAsync(id);
+            if (role == null)
             {
                 return NotFound();
             }
-            return View(tag);
+            return View(role);
         }
 
-        // GET: Tag/Create
+        // GET: Role/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Tag/Create
+        // POST: Role/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TagId,Name")] Tag tag)
+        public async Task<IActionResult> Create([Bind("RoleId,Name,Description")] Role role)
         {
             if (ModelState.IsValid)
             {
-                await _tagService.CreateTagAsync(tag);
-                return RedirectToAction("Tags", "Home");
+                await _roleService.CreateRoleAsync(role);
+                return RedirectToAction("Roles", "Home");
             }
             // Debugging output
             foreach (var state in ModelState)
@@ -60,27 +60,27 @@ namespace BlogApp.Controllers
                 }
             }
 
-            Console.WriteLine("Тэг не валидный");
-            return View(tag);
+            Console.WriteLine("Роль не валидна");
+            return View(role);
         }
 
-        // GET: Tag/Edit/5
+        // GET: Role/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
-            var tag = await _tagService.GetTagByIdAsync(id);
-            if (tag == null)
+            var role = await _roleService.GetRoleByIdAsync(id);
+            if (role == null)
             {
                 return NotFound();
             }
-            return View(tag);
+            return View(role);
         }
 
-        // POST: Tag/Edit/5
+        // POST: Role/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("TagId,Name")] Tag tag)
+        public async Task<IActionResult> Edit(int id, [Bind("RoleId,Name,Description")] Role role)
         {
-            if (id != tag.TagId)
+            if (id != role.RoleId)
             {
                 return NotFound();
             }
@@ -89,11 +89,11 @@ namespace BlogApp.Controllers
             {
                 try
                 {
-                    await _tagService.UpdateTagAsync(tag);
+                    await _roleService.UpdateRoleAsync(role);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TagExists(tag.TagId))
+                    if (!RoleExists(role.RoleId))
                     {
                         return NotFound();
                     }
@@ -102,35 +102,35 @@ namespace BlogApp.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction("Tags", "Home");
+                return RedirectToAction("Roles", "Home");
             }
-            return View(tag);
+            return View(role);
         }
 
-        // GET: Tag/Delete/5
+        // GET: Role/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
-            var tag = await _tagService.GetTagByIdAsync(id);
-            if (tag == null)
+            var role = await _roleService.GetRoleByIdAsync(id);
+            if (role == null)
             {
                 return NotFound();
             }
 
-            return View(tag);
+            return View(role);
         }
 
-        // POST: Tag/Delete/5
+        // POST: Role/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _tagService.DeleteTagAsync(id);
-            return RedirectToAction("Tags", "Home");
+            await _roleService.DeleteRoleAsync(id);
+            return RedirectToAction("Roles", "Home");
         }
 
-        private bool TagExists(int id)
+        private bool RoleExists(int id)
         {
-            return _tagService.GetTagByIdAsync(id) != null;
+            return _roleService.GetRoleByIdAsync(id) != null;
         }
     }
 }

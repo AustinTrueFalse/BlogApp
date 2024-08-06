@@ -2,22 +2,26 @@
 using BlogApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace BlogApp.Controllers
 {
     public class UserController : Controller
     {
         private readonly IUserService _userService;
+        private readonly IRoleService _roleService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IRoleService roleService)
         {
             _userService = userService;
+            _roleService = roleService;
         }
 
         // GET: User
         public async Task<IActionResult> Index()
         {
             var users = await _userService.GetAllUsersAsync();
+            
             return View(users);
         }
 
@@ -46,7 +50,7 @@ namespace BlogApp.Controllers
             if (ModelState.IsValid)
             {
                 await _userService.CreateUserAsync(user);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Users", "Home");
             }
             return View(user);
         }
@@ -59,28 +63,59 @@ namespace BlogApp.Controllers
             {
                 return NotFound();
             }
-            return View(user);
+
+            // Получаем список ролей
+            var roles = await _roleService.GetAllRolesAsync();
+
+            var viewModel = new UserEditViewModel
+            {
+                User = user,
+                Roles = roles, // Обязательно загружаем роли
+                SelectedRoleId = user.RoleId
+            };
+
+            return View(viewModel);
         }
 
         // POST: User/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("UserId,FirstName, LastName,Email,Phone,RegistrationDate,RoleId,Password")] User user)
+        public async Task<IActionResult> Edit(int id, UserEditViewModel model)
         {
-            if (id != user.UserId)
+            if (id != model.User.UserId)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            Console.WriteLine($"SelectedRoleId: {model.SelectedRoleId}");
+
+            model.Roles = await _roleService.GetAllRolesAsync();
+            // Проверьте список доступных ролей
+            Console.WriteLine("Available Roles:");
+            foreach (var role in model.Roles)
             {
+                Console.WriteLine($"RoleId: {role.RoleId}, Name: {role.Name}");
+            }
+
+            var selectedRole = model.Roles.FirstOrDefault(r => r.RoleId == model.SelectedRoleId);
+
+            if (selectedRole == null)
+            {
+                ModelState.AddModelError("SelectedRoleId", "The selected role is invalid.");
+                return View(model);
+            }
+
+            
                 try
                 {
-                    await _userService.UpdateUserAsync(user);
+                    // Обновляем данные пользователя
+                    model.User.RoleId = selectedRole.RoleId;
+                    model.User.Role = selectedRole;
+                    await _userService.UpdateUserAsync(model.User);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserExists(user.UserId))
+                    if (!await UserExistsAsync(model.User.UserId))
                     {
                         return NotFound();
                     }
@@ -88,10 +123,15 @@ namespace BlogApp.Controllers
                     {
                         throw;
                     }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(user);
+                }           
+
+            model.Roles = await _roleService.GetAllRolesAsync();
+            return RedirectToAction("Users", "Home");
+        }
+
+        private async Task<bool> UserExistsAsync(int id)
+        {
+            return await _userService.GetUserByIdAsync(id) != null;
         }
 
         // GET: User/Delete/5
@@ -112,7 +152,7 @@ namespace BlogApp.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await _userService.DeleteUserAsync(id);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Users", "Home");
         }
 
         private bool UserExists(int id)

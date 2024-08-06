@@ -13,12 +13,16 @@ namespace BlogApp.Models.Services
 
         public async Task<IEnumerable<Comment>> GetAllCommentsAsync()
         {
-            return await _context.Comments.ToListAsync();
+            return await _context.Comments
+                .Include(c => c.User)
+                .ToListAsync();
         }
 
         public async Task<Comment> GetCommentByIdAsync(int id)
         {
-            return await _context.Comments.FindAsync(id);
+            return await _context.Comments
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.CommentId == id);
         }
 
         public async Task<Comment> CreateCommentAsync(Comment comment)
@@ -46,5 +50,7 @@ namespace BlogApp.Models.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+
     }
 }

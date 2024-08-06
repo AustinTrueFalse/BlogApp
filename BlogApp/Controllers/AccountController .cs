@@ -30,29 +30,28 @@ namespace BlogApp.Controllers
         {
             if (ModelState.IsValid)
             {
-              
                 var user = await _context.Users
                     .Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.Email == model.Email && u.Password == model.Password); 
-                
-                Console.WriteLine(user);
+                    .FirstOrDefaultAsync(u => u.Email == model.Email && u.Password == model.Password);
 
-                if (user != null)
+                if (user != null && user.Role != null) // Добавить проверку на NULL
                 {
                    
                     var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.Name)
+                new Claim(ClaimTypes.Name, user.Email ?? string.Empty), // Проверка на NULL
+                new Claim(ClaimTypes.Role, user.Role.Name ?? string.Empty),// Проверка на NULL
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()), // Проверка на NULL
+
             };
-                  
-                  
+               
+
                     var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
                     // Redirect to the desired page after login
-                    return RedirectToAction("Index", "Article");
+                    return RedirectToAction("Index", "Home");
                 }
 
                 // User not found or invalid password
@@ -75,5 +74,39 @@ namespace BlogApp.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
+
+        // GET: Account/Register
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new User
+                {
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    Phone = model.Phone,
+                    Email = model.Email,
+                    Password = model.Password,
+                    RoleId = 3
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // Перенаправление на страницу входа после успешной регистрации
+                return RedirectToAction("Login", "Account");
+            }
+
+            return View(model);
+        }
+
     }
 }

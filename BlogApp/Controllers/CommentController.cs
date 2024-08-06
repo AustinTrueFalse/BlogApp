@@ -2,23 +2,31 @@
 using BlogApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace BlogApp.Controllers
 {
     public class CommentController : Controller
     {
         private readonly ICommentService _commentService;
+        private readonly ApplicationDbContext _context;
 
-        public CommentController(ICommentService commentService)
+        public CommentController(ICommentService commentService, ApplicationDbContext context)
         {
             _commentService = commentService;
+            _context = context;
         }
 
         // GET: Comment
-        public async Task<IActionResult> Index()
+        public async Task<IEnumerable<Comment>> GetAllCommentsAsync()
         {
-            var comments = await _commentService.GetAllCommentsAsync();
-            return View(comments);
+            var comments = await _context.Comments.ToListAsync();
+            if (comments == null)
+            {
+                Console.WriteLine("Комментарии не найдены в сервисе");
+                comments = new List<Comment>(); // Инициализируем пустым списком
+            }
+            return comments;
         }
 
         // GET: Comment/Details/5
@@ -33,22 +41,49 @@ namespace BlogApp.Controllers
         }
 
         // GET: Comment/Create
-        public IActionResult Create()
+        public IActionResult Create(int articleId)
         {
+            // Передаем ID статьи в представление, чтобы знать, к какой статье добавлять комментарий
+            ViewBag.ArticleId = articleId;
             return View();
         }
 
-        // POST: Comment/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CommentId,ArticleId,UserId,Content,CommentDate")] Comment comment)
+        public async Task<IActionResult> Create(int articleId, string content)
         {
-            if (ModelState.IsValid)
+            if (!User.Identity.IsAuthenticated)
             {
-                await _commentService.CreateCommentAsync(comment);
-                return RedirectToAction(nameof(Index));
+                return Unauthorized();
             }
-            return View(comment);
+
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return BadRequest("Invalid User ID format");
+            }
+
+            var article = await _context.Articles.FindAsync(articleId);
+            if (article == null)
+            {
+                return NotFound("Article not found");
+            }
+
+            var comment = new Comment
+            {
+                ArticleId = articleId,
+                UserId = userId,
+                Content = content,
+                CommentDate = DateTime.UtcNow
+            };
+
+            await _commentService.CreateCommentAsync(comment);
+
+            TempData["IncreaseViewCount"] = false;
+
+            //// Перенаправление на страницу статьи, но не вызываем метод Details
+            return RedirectToAction("Details", "Article", new { id = articleId, isView = false } );
         }
 
         // GET: Comment/Edit/5
@@ -65,15 +100,19 @@ namespace BlogApp.Controllers
         // POST: Comment/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ArticleId,UserId,Content,CommentDate")] Comment comment)
+        public async Task<IActionResult> Edit(int id, [Bind("CommentId,ArticleId,UserId,Content,CommentDate")] Comment comment)
         {
+            Console.WriteLine(id);
+            Console.WriteLine(comment.CommentId);
+            Console.WriteLine(comment.ArticleId); // Для проверки
+            Console.WriteLine(comment.UserId); // Для проверки
+
             if (id != comment.CommentId)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
+            
                 try
                 {
                     await _commentService.UpdateCommentAsync(comment);
@@ -89,9 +128,9 @@ namespace BlogApp.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(comment);
+                return RedirectToAction("Comments", "Home");
+                
+            
         }
 
         // GET: Comment/Delete/5
@@ -112,8 +151,11 @@ namespace BlogApp.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await _commentService.DeleteCommentAsync(id);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Comments", "Home");
         }
+
+        
+  
 
         private bool CommentExists(int id)
         {

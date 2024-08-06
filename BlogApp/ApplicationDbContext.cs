@@ -28,17 +28,39 @@ namespace BlogApp
                     j => j
                         .HasOne<Tag>()
                         .WithMany()
-                        .HasForeignKey("TagId"),
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade),
                     j => j
                         .HasOne<Article>()
                         .WithMany()
-                        .HasForeignKey("ArticleId"));
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j =>
+                    {
+                        j.HasKey("ArticleId", "TagId");
+                    });
 
+            // Настройка связи между User и Role
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Role)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Настройка каскадного удаления для комментариев, связанных со статьей
+            modelBuilder.Entity<Article>()
+                .HasMany(a => a.Comments)
+                .WithOne(c => c.Article)
+                .HasForeignKey(c => c.ArticleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Настройка каскадного удаления для комментариев, связанных с пользователем
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Comments)
+                .WithOne(c => c.User)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
+
     }
 }

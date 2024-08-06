@@ -13,12 +13,19 @@ namespace BlogApp.Models.Services
 
         public async Task<IEnumerable<Article>> GetAllArticlesAsync()
         {
-            return await _context.Articles.ToListAsync();
+            return await _context.Articles
+                .Include(a => a.Tags) 
+                .ToListAsync();
         }
 
         public async Task<Article> GetArticleByIdAsync(int id)
         {
-            return await _context.Articles.FindAsync(id);
+            return await _context.Articles
+                .Include(a => a.User)
+                .Include(a => a.Comments)
+                    .ThenInclude(c => c.User)
+                .Include(a => a.Tags)
+                .FirstOrDefaultAsync(a => a.ArticleId == id);
         }
 
         public async Task<IEnumerable<Article>> GetArticlesByAuthorIdAsync(int authorId)

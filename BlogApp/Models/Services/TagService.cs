@@ -13,7 +13,7 @@ namespace BlogApp.Models.Services
 
         public async Task<IEnumerable<Tag>> GetAllTagsAsync()
         {
-            return await _context.Tags.ToListAsync();
+            return await _context.Tags.ToListAsync() ?? new List<Tag>(); // Обработка null
         }
 
         public async Task<Tag> GetTagByIdAsync(int id)

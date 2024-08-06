@@ -1,5 +1,7 @@
-﻿namespace BlogApp.Models
-{
+﻿using BlogApp.Models;
+using System.ComponentModel.DataAnnotations;
+
+namespace BlogApp.Models {
     public class User
     {
         public int UserId { get; set; }
@@ -12,7 +14,9 @@
         public string Password { get; set; }
 
         public Role Role { get; set; }
-        public ICollection<Article> Articles { get; set; }
-        public ICollection<Comment> Comments { get; set; }
+        public ICollection<Article> Articles { get; set; } = new List<Article>();
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
+
 }
+

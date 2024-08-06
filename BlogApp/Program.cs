@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using BlogApp;
 using BlogApp.Models.Services;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Конфигурация строки подключения к базе данных
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    options.UseSqlite(connectionString);
+    options.EnableSensitiveDataLogging();
+    options.LogTo(Console.WriteLine, LogLevel.Information);
+});
 
 // Добавление сервисов в контейнер
 builder.Services.AddControllersWithViews();
@@ -23,6 +26,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 // Настройка аутентификации и авторизации
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -30,6 +34,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied"; // Путь для доступа к запрету
     });
 
 builder.Services.AddAuthorization(options =>
@@ -44,7 +49,7 @@ var app = builder.Build();
 // Конфигурация HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Home/Error"); // Общая страница ошибок
     app.UseHsts();
 }
 
@@ -57,8 +62,24 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Обработка ошибок 403 и 404
+app.UseStatusCodePages(async context =>
+{
+    var response = context.HttpContext.Response;
+    var statusCode = response.StatusCode;
+    if (statusCode == 403)
+    {
+        response.Redirect("/Account/AccessDenied");
+    }
+    else if (statusCode == 404)
+    {
+        response.Redirect("/Home/NotFound");
+    }
+});
+
+// Определение маршрутов
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}"); // Изменено на "Home" и "Index" по умолчанию
 
 app.Run();
