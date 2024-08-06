@@ -34,7 +34,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/AccessDenied"; // Путь для доступа к запрету
+        options.AccessDeniedPath = "/Account/AccessDenied";
     });
 
 builder.Services.AddAuthorization(options =>
@@ -80,6 +80,6 @@ app.UseStatusCodePages(async context =>
 // Определение маршрутов
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}"); // Изменено на "Home" и "Index" по умолчанию
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

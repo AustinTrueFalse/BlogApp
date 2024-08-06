@@ -34,7 +34,7 @@ namespace BlogApp.Controllers
                     .Include(u => u.Role)
                     .FirstOrDefaultAsync(u => u.Email == model.Email && u.Password == model.Password);
 
-                if (user != null && user.Role != null) // Добавить проверку на NULL
+                if (user != null && user.Role != null)
                 {
                    
                     var claims = new List<Claim>

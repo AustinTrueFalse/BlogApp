@@ -31,7 +31,7 @@ namespace BlogApp.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {
-                return Unauthorized(); // Или перенаправление на страницу входа
+                return Unauthorized();
             }
 
             var articles = await _articleService.GetArticlesByAuthorIdAsync(int.Parse(userId));
@@ -44,9 +44,7 @@ namespace BlogApp.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var role = User.FindFirstValue(ClaimTypes.Role);
 
-            /// Выводим в консоль роль человека вызывающего метод
-
-           
+         
 
             var articles = await _articleService.GetAllArticlesAsync();
             return View(articles);
@@ -94,7 +92,7 @@ namespace BlogApp.Controllers
         {
             if (!User.Identity.IsAuthenticated)
             {
-                return Unauthorized(); // Или перенаправление на страницу входа
+                return Unauthorized();
             }
 
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);

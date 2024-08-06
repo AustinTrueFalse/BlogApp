@@ -13,13 +13,13 @@ namespace BlogApp.Controllers
             _context = context;
         }
 
-        // Пример действия, доступного только для администратора
+     
         public IActionResult Index()
         {
             return View();
         }
 
-        // Другие действия
+        
     }
 
     [Authorize(Policy = "ModeratorOnly")]
@@ -32,13 +32,13 @@ namespace BlogApp.Controllers
             _context = context;
         }
 
-        // Пример действия, доступного только для модераторов
+        
         public IActionResult Index()
         {
             return View();
         }
 
-        // Другие действия
+        
     }
 
     [Authorize(Policy = "UserOnly")]
@@ -51,12 +51,12 @@ namespace BlogApp.Controllers
             _context = context;
         }
 
-        // Пример действия, доступного только для пользователей
+        
         public IActionResult Index()
         {
             return View();
         }
 
-        // Другие действия
+       
     }
 }

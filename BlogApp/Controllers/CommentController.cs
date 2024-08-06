@@ -102,10 +102,7 @@ namespace BlogApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CommentId,ArticleId,UserId,Content,CommentDate")] Comment comment)
         {
-            Console.WriteLine(id);
-            Console.WriteLine(comment.CommentId);
-            Console.WriteLine(comment.ArticleId); // Для проверки
-            Console.WriteLine(comment.UserId); // Для проверки
+            
 
             if (id != comment.CommentId)
             {
