@@ -1,7 +1,10 @@
 using BlogApp.Models;
 using BlogApp.Models.Services;
 using Microsoft.AspNetCore.Mvc;
+using NLog;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace BlogApp.Controllers
 {
@@ -14,9 +17,10 @@ namespace BlogApp.Controllers
         private readonly IArticleService _articleService;
         private readonly ICommentService _commentService;
         private readonly ApplicationDbContext _context;
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public HomeController(
-            ILogger<HomeController> logger, 
+            ILogger<HomeController> logger,
             IUserService userService,
             IRoleService roleService,
             ITagService tagService,
@@ -24,7 +28,6 @@ namespace BlogApp.Controllers
             ICommentService commentService,
             ApplicationDbContext context
             )
-
         {
             _logger = logger;
             _userService = userService;
@@ -35,14 +38,18 @@ namespace BlogApp.Controllers
             _context = context;
         }
 
+        // Переход на главную страницу и перенаправление на страницу статей
         public IActionResult Index()
         {
+            Logger.Info("Переход на главную страницу. Перенаправление на страницу со статьями.");
             return RedirectToAction("Articles");
         }
 
+        // GET: Home/Comments
         public async Task<IActionResult> Comments()
         {
             var comments = await _commentService.GetAllCommentsAsync();
+            Logger.Info("Показана страница со всеми комментариями.");
             return View(comments);
         }
 
@@ -56,6 +63,7 @@ namespace BlogApp.Controllers
                 ArticleCount = _context.Articles.Count(a => a.Tags.Any(t => t.TagId == tag.TagId))
             }).ToList();
 
+            Logger.Info("Показана страница с тэгами.");
             return View(tagsWithArticleCount);
         }
 
@@ -67,12 +75,16 @@ namespace BlogApp.Controllers
             {
                 user.Role = await _roleService.GetRoleByIdAsync(user.RoleId); // Получаем роль для пользователя
             }
+
+            Logger.Info("Показана страница со всеми пользователями.");
             return View(users);
         }
 
+        // GET: Home/Roles
         public async Task<IActionResult> Roles()
         {
             var roles = await _roleService.GetAllRolesAsync();
+            Logger.Info("Показана страница со всеми ролями.");
             return View(roles);
         }
 
@@ -80,24 +92,26 @@ namespace BlogApp.Controllers
         public async Task<IActionResult> Articles()
         {
             var articles = await _articleService.GetAllArticlesAsync();
+            Logger.Info("Показана страница со всеми статьями.");
             return View(articles);
         }
-
-
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
+            Logger.Error("Произошла ошибка. Запрос ID: {RequestId}", Activity.Current?.Id ?? HttpContext.TraceIdentifier);
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
         public IActionResult AccessDenied()
         {
+            Logger.Warn("Попытка доступа к ограниченной странице.");
             return View();
         }
 
         public IActionResult NotFound()
         {
+            Logger.Warn("Страница не найдена.");
             return View();
         }
     }

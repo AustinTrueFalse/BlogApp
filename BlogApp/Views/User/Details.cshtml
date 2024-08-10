@@ -24,15 +24,6 @@
     </ul>
 </div>
 
-<div>
-    <h3>Comments</h3>
-    <ul>
-        @foreach (var comment in Model.Comments)
-        {
-            <li>@comment.Content (on <a asp-controller="Article" asp-action="Details" asp-route-id="@comment.ArticleId">@comment.Article.Title</a>)</li>
-        }
-    </ul>
-</div>
 
 <div class="mt-4">
     @if (User.IsInRole("Administrator"))
@@ -41,12 +32,10 @@
         <form asp-controller="User" asp-action="Delete" asp-route-id="@Model.UserId" method="post" style="display:inline;">
             <button type="submit" class="btn btn-danger">Delete</button>
         </form>
-        <a asp-controller="Home" asp-action="Users" class="btn btn-secondary">Back to List</a>
     }
     @if (User.IsInRole("Moderator"))
     {
         <a asp-controller="User" asp-action="Edit" asp-route-id="@Model.UserId" class="btn btn-warning">Edit</a>
-        <a asp-controller="Home" asp-action="Users" class="btn btn-secondary">Back to List</a>
     }
     <a asp-controller="Home" asp-action="Users" class="btn btn-secondary">Back to List</a>
     

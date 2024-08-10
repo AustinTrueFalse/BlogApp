@@ -11,7 +11,7 @@
         <div class="form-group">
             <label asp-for="Content" class="control-label"></label>
             <textarea asp-for="Content" class="form-control"></textarea>
-            <span asp-validation-for="Content" class="text-danger"></span>
+            <span asp-validation-for="Content" class="text-danger"></span> <!-- Добавлено отображение ошибки для Content -->
         </div>
         <input type="hidden" asp-for="CommentId" />
         <input type="hidden" asp-for="ArticleId" />
@@ -22,3 +22,9 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -7,7 +7,7 @@
         public string Title { get; set; }
         public string Content { get; set; }
         public DateTime PublicationDate { get; set; } = DateTime.UtcNow;
-        public int ViewCount { get; set; } // Добавьте это свойство
+        public int ViewCount { get; set; }
 
         public User User { get; set; }
         public ICollection<Comment> Comments { get; set; }
